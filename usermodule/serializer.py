@@ -10,13 +10,19 @@ from allauth.account.utils import setup_user_email
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'full_name', 'email', 'password', 'user_level')
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'role': {'write_only': True},
+        }
 
     def create(self, validated_data):
         password = validated_data.pop('password')
+        role, _ = Role.objects.get_or_create(slug='user', defaults={'name': 'User'})
+        validated_data['role'] = role
         user = CustomUser.objects.create_user(**validated_data)
         user.set_password(password)
         user.save()
