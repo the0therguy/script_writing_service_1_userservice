@@ -5,6 +5,8 @@ import string
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer as JwtTokenObtainPairSerializer
 from .models import *
 from django.contrib.auth import get_user_model
+from allauth.account.adapter import get_adapter
+from allauth.account.utils import setup_user_email
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
@@ -45,8 +47,33 @@ class OTPResendSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
 
 
-class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-    username_field = get_user_model().USERNAME_FIELD
+# class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
+#     username_field = get_user_model().USERNAME_FIELD
+#
+#     @classmethod
+#     def get_token(cls, user):
+#         token = super().get_token(user)
+#         token['name'] = user.name
+#         token['email'] = user.email
+#         token['is_superuser'] = user.is_superuser
+#         token['is_staff'] = user.is_staff
+#
+#         return token
+
+class CustomLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+
+    def validate(self, data):
+        email = data.get('email', '')
+        password = data.get('password', '')
+        user = get_adapter().authenticate(self.context.get('request'), email=email, password=password)
+
+        if not user:
+            raise serializers.ValidationError('Invalid email or password.')
+
+        data['user'] = user
+        return data
 
     @classmethod
     def get_token(cls, user):

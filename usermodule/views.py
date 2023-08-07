@@ -3,7 +3,7 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .serializer import *
-from script_write.models import *
+from .models import *
 from datetime import datetime
 from datetime import datetime, timedelta
 import random
@@ -102,7 +102,7 @@ class OTPResendView(generics.CreateAPIView):
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     # Replace the serializer with your custom
-    serializer_class = TokenObtainPairSerializer
+    serializer_class = CustomLoginSerializer
 
 
 class LogoutView(APIView):
