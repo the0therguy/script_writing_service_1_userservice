@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from .views import *
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -19,4 +19,5 @@ urlpatterns = [
     path('api/v1/get-glossary/<str:uid>/', GlossaryDetailView.as_view(), name='glossary-view-update-delete'),
     path('api/v1/plans/', PlanListView.as_view(), name='plan-list'),
     path('api/v1/get-plan/<str:plan_uuid>/', PlanDetailView.as_view(), name='plan-list'),
+    path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
 ]

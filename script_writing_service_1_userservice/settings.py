@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_rest_passwordreset',
     'allauth',
     'allauth.account',
     'usermodule',
+    # 'usermodule.apps.UsermoduleConfig',
 ]
 
 MIDDLEWARE = [
@@ -60,8 +62,8 @@ ROOT_URLCONF = 'script_writing_service_1_userservice.urls'
 
 AUTH_USER_MODEL = 'usermodule.CustomUser'
 # AUTHENTICATION_BACKENDS = ['usermodule.backends.EmailBackend']
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -152,6 +154,23 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# mydrfproject/settings.py
+DJANGO_REST_PASSWORDRESET_TOKEN_CONFIG = {
+    "CLASS": "django_rest_passwordreset.tokens.RandomNumberTokenGenerator",
+    "OPTIONS": {
+        "min_number": 1500,
+        "max_number": 9999
+    }
+}
+
+# Email Backend Configuration
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Replace with your preferred backend
+
+EMAIL_PORT = 587  # Replace with your email port
+EMAIL_USE_TLS = True  # Set to False if your email server doesn't use TLS
+EMAIL_HOST = 'smtp host'  # Replace with your email host for gmail -> 'smtp.gmail.com'
+EMAIL_HOST_USER = 'email'  # Replace with your email username
+EMAIL_HOST_PASSWORD = 'password'  # Replace with your email password
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
