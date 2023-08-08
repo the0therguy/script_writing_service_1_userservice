@@ -145,10 +145,18 @@ class Invoice(models.Model):
         return self.transaction.user.username + ' ' + self.invoice_uuid
 
 
+ACTIVITY_ACTION = (
+    ('create', 'Create'),
+    ('update', 'Update'),
+    ('delete', 'Delete')
+)
+
+
 class UserActivityLog(models.Model):
     activity_uuid = models.CharField(max_length=50)
     message = models.TextField(null=True, blank=True)
     details = models.JSONField(null=True, blank=True)
+    action = models.CharField(max_length=30, choices=ACTIVITY_ACTION, default='create')
     created_on = models.DateTimeField(auto_now_add=True)
 
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
@@ -179,5 +187,3 @@ class NotePad(models.Model):
 
     def __str__(self):
         return self.title
-
-

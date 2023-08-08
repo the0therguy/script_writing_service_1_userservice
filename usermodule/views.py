@@ -136,6 +136,11 @@ class ChangePasswordView(APIView):
             # Change the password and save the user object
             request.user.set_password(new_password)
             request.user.save()
+            activity = UserActivityLog.objects.create(
+                **{'activity_uuid': uuid.uuid4(), 'action': 'update',
+                   'message': f"{request.user.username}'s password updated",
+                   'created_by': request.user})
+            activity.save()
 
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
         else:
@@ -151,15 +156,16 @@ class GlossaryView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
 
         serializer = GlossarySerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            activity = ActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'message': 'glossary created', 'created_by': request.user})
+            activity = UserActivityLog.objects.create(
+                **{'activity_uuid': uuid.uuid4(), 'action': 'create', 'message': "glossary created",
+                   'created_by': request.user})
             activity.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -183,7 +189,7 @@ class GlossaryDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, uid):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -194,14 +200,15 @@ class GlossaryDetailView(APIView):
         serializer = GlossarySerializer(glossary, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            activity = ActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'message': 'glossary updated', 'created_by': request.user})
+            activity = UserActivityLog.objects.create(
+                **{'activity_uuid': uuid.uuid4(), 'action': 'update', 'message': 'glossary updated',
+                   'created_by': request.user})
             activity.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, uid):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
         glossary = self.get_object(uid)
@@ -209,8 +216,9 @@ class GlossaryDetailView(APIView):
             return Response({"message": "Glossary not found."}, status=status.HTTP_404_NOT_FOUND)
 
         glossary.delete()
-        activity = ActivityLog.objects.create(
-            **{'activity_uuid': uuid.uuid4(), 'message': 'glossary deleted', 'created_by': request.user})
+        activity = UserActivityLog.objects.create(
+            **{'activity_uuid': uuid.uuid4(), 'action': 'delete', 'message': f'{uid} glossary deleted',
+               'created_by': request.user})
         activity.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -224,13 +232,17 @@ class PlanListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
 
         serializer = PlanSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
+            activity = UserActivityLog.objects.create(
+                **{'activity_uuid': uuid.uuid4(), 'action': 'create', 'message': 'new plan created',
+                   'created_by': request.user})
+            activity.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -253,7 +265,7 @@ class PlanDetailView(APIView):
         return Response(serializer.data)
 
     def put(self, request, plan_uuid):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -263,11 +275,15 @@ class PlanDetailView(APIView):
         serializer = PlanSerializer(plan, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            activity = UserActivityLog.objects.create(
+                **{'activity_uuid': uuid.uuid4(), 'action': 'update', 'message': 'new plan updated',
+                   'created_by': request.user})
+            activity.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, plan_uuid):
-        if not request.user.role or request.user.role.name != 'admin':
+        if not request.user.role or request.user.role.name != 'Admin':
             return Response({"message": "You are not authorized to perform this action."},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -276,4 +292,8 @@ class PlanDetailView(APIView):
             return Response({"message": "Plan not found."}, status=status.HTTP_404_NOT_FOUND)
         plan.active = False  # Mark the plan as inactive instead of deleting it
         plan.save()
+        activity = UserActivityLog.objects.create(
+            **{'activity_uuid': uuid.uuid4(), 'action': 'delete', 'message': 'plan deleted',
+               'created_by': request.user})
+        activity.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
