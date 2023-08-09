@@ -297,3 +297,29 @@ class PlanDetailView(APIView):
                'created_by': request.user})
         activity.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CustomUserViewByEmail(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, email):
+        user = CustomUser.objects.get(email=email)
+        return user
+
+    def get(self, request, email):
+        user = self.get_object(email)
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomUserViewById(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        user = CustomUser.objects.get(pk=pk)
+        return user
+
+    def get(self, request, pk):
+        user = self.get_object(pk)
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -20,4 +20,6 @@ urlpatterns = [
     path('api/v1/plans/', PlanListView.as_view(), name='plan-list'),
     path('api/v1/get-plan/<str:plan_uuid>/', PlanDetailView.as_view(), name='plan-list'),
     path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
+    path('api/v1/get-user-by-email/<str:email>/', CustomUserViewByEmail.as_view(), name='user-view-by-email'),
+    path('api/v1/get-user-by-id/<int:pk>/', CustomUserViewById.as_view(), name='user-view-by-id'),
 ]
