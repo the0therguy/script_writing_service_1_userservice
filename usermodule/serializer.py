@@ -74,10 +74,8 @@ class CustomLoginSerializer(serializers.Serializer):
         email = data.get('email', '')
         password = data.get('password', '')
         user = get_adapter().authenticate(self.context.get('request'), email=email, password=password)
-
         if not user:
             raise serializers.ValidationError('Invalid email or password.')
-
         data['user'] = user
         return data
 

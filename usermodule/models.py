@@ -57,11 +57,24 @@ PROFILE_LEVEL = (
     ('professional', 'Professional')
 )
 
+WEEKDAYS = [
+    ('mon', 'Monday'),
+    ('tue', 'Tuesday'),
+    ('wed', 'Wednesday'),
+    ('thu', 'Thursday'),
+    ('fri', 'Friday'),
+    ('sat', 'Saturday'),
+    ('sun', 'Sunday'),
+]
+
 
 class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=220, null=True, blank=True)
     email = models.EmailField(_('email'), unique=True)
     email_verified = models.BooleanField(default=False)
+    reminder = models.BooleanField(default=False)
+    weekday = models.CharField(max_length=3, choices=WEEKDAYS, null=True, blank=True)
+
     user_level = models.CharField(max_length=100, choices=PROFILE_LEVEL, default='beginners')
 
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True)
