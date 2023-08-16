@@ -10,7 +10,6 @@ from allauth.account.utils import setup_user_email
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'full_name', 'email', 'password', 'user_level', 'device')
@@ -118,3 +117,15 @@ class PlanSerializer(serializers.ModelSerializer):
         model = Plan
         fields = '__all__'
         read_only_fields = ['plan_uuid']
+
+
+class AdviceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advice
+        fields = '__all__'
+
+
+class AdviceUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advice
+        exclude = ('advice_uuid', 'created_on')

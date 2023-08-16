@@ -41,7 +41,7 @@ class PermissionRole(models.Model):
 
 
 class Advice(models.Model):
-    uuid = models.CharField(max_length=50)
+    advice_uuid = models.CharField(max_length=50)
     title = models.CharField(max_length=200, null=True, blank=True)
     body = models.TextField()
     bg_color = models.CharField(max_length=8, null=True, blank=True)

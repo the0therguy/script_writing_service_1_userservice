@@ -23,6 +23,12 @@ from rest_framework.parsers import JSONParser
 
 # Create your views here.
 
+def create_user_activity(data):
+    data['activity_uuid'] = str(uuid.uuid4())
+    activity = UserActivityLog.objects.create(**data)
+    activity.save()
+
+
 class CustomUserCreateView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = CustomUserSerializer
@@ -136,12 +142,9 @@ class ChangePasswordView(APIView):
             # Change the password and save the user object
             request.user.set_password(new_password)
             request.user.save()
-            activity = UserActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'action': 'update',
-                   'message': f"{request.user.username}'s password updated",
-                   'created_by': request.user})
-            activity.save()
-
+            create_user_activity({'action': 'update',
+                                  'message': f"{request.user.username}'s password updated",
+                                  'created_by': request.user})
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -163,10 +166,8 @@ class GlossaryView(APIView):
         serializer = GlossarySerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            activity = UserActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'action': 'create', 'message': "glossary created",
-                   'created_by': request.user})
-            activity.save()
+            create_user_activity({'action': 'create', 'message': "glossary created",
+                                  'created_by': request.user})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -200,10 +201,8 @@ class GlossaryDetailView(APIView):
         serializer = GlossarySerializer(glossary, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            activity = UserActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'action': 'update', 'message': 'glossary updated',
-                   'created_by': request.user})
-            activity.save()
+            create_user_activity({'action': 'update', 'message': 'glossary updated',
+                                  'created_by': request.user})
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -216,10 +215,8 @@ class GlossaryDetailView(APIView):
             return Response({"message": "Glossary not found."}, status=status.HTTP_404_NOT_FOUND)
 
         glossary.delete()
-        activity = UserActivityLog.objects.create(
-            **{'activity_uuid': uuid.uuid4(), 'action': 'delete', 'message': f'{uid} glossary deleted',
-               'created_by': request.user})
-        activity.save()
+        create_user_activity({'action': 'delete', 'message': f'{uid} glossary deleted',
+                              'created_by': request.user})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -239,10 +236,8 @@ class PlanListView(APIView):
         serializer = PlanSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            activity = UserActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'action': 'create', 'message': 'new plan created',
-                   'created_by': request.user})
-            activity.save()
+            create_user_activity({'action': 'create', 'message': 'new plan created',
+                                  'created_by': request.user})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -275,10 +270,8 @@ class PlanDetailView(APIView):
         serializer = PlanSerializer(plan, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            activity = UserActivityLog.objects.create(
-                **{'activity_uuid': uuid.uuid4(), 'action': 'update', 'message': 'new plan updated',
-                   'created_by': request.user})
-            activity.save()
+            create_user_activity({'action': 'update', 'message': 'new plan updated',
+                                  'created_by': request.user})
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -292,10 +285,8 @@ class PlanDetailView(APIView):
             return Response({"message": "Plan not found."}, status=status.HTTP_404_NOT_FOUND)
         plan.active = False  # Mark the plan as inactive instead of deleting it
         plan.save()
-        activity = UserActivityLog.objects.create(
-            **{'activity_uuid': uuid.uuid4(), 'action': 'delete', 'message': 'plan deleted',
-               'created_by': request.user})
-        activity.save()
+        create_user_activity({'action': 'delete', 'message': 'plan deleted',
+                              'created_by': request.user})
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -323,3 +314,72 @@ class CustomUserViewById(APIView):
         user = self.get_object(pk)
         serializer = CustomUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class AdviceListCreate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        advices = Advice.objects.all()
+        serializer = AdviceSerializer(advices, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AdviceSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity({'action': 'create', 'message': 'new advice crated',
+                                  'created_by': request.user})
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AdviceRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, advice_uuid):
+        try:
+            return Advice.objects.get(advice_uuid=advice_uuid)
+        except Advice.DoesNotExist:
+            return None
+
+    def get(self, request, advice_uuid):
+        advice = self.get_object(advice_uuid)
+        if not advice:
+            return Response('No advice found', status=status.HTTP_400_BAD_REQUEST)
+        serializer = AdviceSerializer(advice)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, advice_uuid):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        advice = self.get_object(advice_uuid)
+        if not advice:
+            return Response('No advice found', status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = AdviceSerializer(advice, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity(
+                {'action': 'update', 'message': f"advice {advice_uuid} was updated", 'created_by': request.user})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, advice_uuid):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        advice = self.get_object(advice_uuid)
+        if not advice:
+            return Response('No advice found', status=status.HTTP_400_BAD_REQUEST)
+        advice.delete()
+        create_user_activity(
+            {'action': 'delete', 'message': f"advice {advice_uuid} was deleted", 'created_by': request.user})
+        return Response(status=status.HTTP_204_NO_CONTENT)
