@@ -129,3 +129,9 @@ class AdviceUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Advice
         exclude = ('advice_uuid', 'created_on')
+
+
+class CustomUserInfoUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        exclude = ('email', 'email_verified', 'role', 'username')

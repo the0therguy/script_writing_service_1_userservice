@@ -294,13 +294,33 @@ class CustomUserViewByEmail(APIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self, email):
-        user = CustomUser.objects.get(email=email)
-        return user
+        try:
+            return CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return None
 
     def get(self, request, email):
         user = self.get_object(email)
+        if not user:
+            return Response('No user found', status=status.HTTP_400_BAD_REQUEST)
+        if email != request.user.email:
+            return Response("You don't have access on this page", status=status.HTTP_403_FORBIDDEN)
         serializer = CustomUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, email):
+        user = self.get_object(email)
+        if not user:
+            return Response('No user found', status=status.HTTP_400_BAD_REQUEST)
+        if email != user.email:
+            return Response("You don't have access on this page", status=status.HTTP_403_FORBIDDEN)
+
+        serializer = CustomUserInfoUpdateSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity({'action': 'update', 'message': 'user updated', 'created_by': request.user})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CustomUserViewById(APIView):
