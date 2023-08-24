@@ -470,3 +470,44 @@ class MusicRetrieveView(APIView):
             return Response("There is no music about this id", status=status.HTTP_400_BAD_REQUEST)
         music.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class IdeaSparkCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        idea_spark = IdeaSpark.objects.filter(created_by=request.user)
+        serializer = IdeaSparkSerializer(idea_spark, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        request.data['created_by'] = request.user.id
+        serializer = IdeaSparkSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IdeaSparkRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, idea_spark_uuid, user):
+        try:
+            return IdeaSpark.objects.get(idea_spark_uuid=idea_spark_uuid, created_by=user)
+        except IdeaSpark.DoesNotExist:
+            return None
+
+    def get(self, request, idea_spark_uuid):
+        idea_spark = self.get_object(idea_spark_uuid=idea_spark_uuid, user=request.user)
+        if not idea_spark:
+            return Response("There is no idea spark about this id", status=status.HTTP_400_BAD_REQUEST)
+        serializer = IdeaSparkSerializer(idea_spark)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, idea_spark_uuid):
+        idea_spark = self.get_object(idea_spark_uuid=idea_spark_uuid, user=request.user)
+        if not idea_spark:
+            return Response("There is no idea spark about this id", status=status.HTTP_400_BAD_REQUEST)
+        idea_spark.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

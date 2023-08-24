@@ -26,4 +26,7 @@ urlpatterns = [
     path('api/v1/advice/<str:advice_uuid>/', AdviceRetrieveView.as_view(), name='advice-get-update-delete'),
     path('api/v1/musics/', MusicListCreateView.as_view(), name='music-list-create'),
     path('api/v1/music/<str:music_uuid>/', MusicRetrieveView.as_view(), name='music-get-update-delete'),
+    path('api/v1/idea-sparks/', IdeaSparkCreateView.as_view(), name='idea-spark-list-create'),
+    path('api/v1/idea-spark/<str:idea_spark_uuid>/', IdeaSparkRetrieveView.as_view(),
+         name='idea-spark-get-update-delete'),
 ]

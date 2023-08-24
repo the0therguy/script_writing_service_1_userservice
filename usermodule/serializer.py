@@ -147,3 +147,9 @@ class MusicUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Music
         exclude = ('music_uuid', 'created_on', 'created_by')
+
+
+class IdeaSparkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdeaSpark
+        fields = '__all__'
