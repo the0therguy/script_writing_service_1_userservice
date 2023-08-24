@@ -24,4 +24,6 @@ urlpatterns = [
     path('api/v1/get-user-by-id/<int:pk>/', CustomUserViewById.as_view(), name='user-view-by-id'),
     path('api/v1/advices/', AdviceListCreate.as_view(), name='advice-get-create'),
     path('api/v1/advice/<str:advice_uuid>/', AdviceRetrieveView.as_view(), name='advice-get-update-delete'),
+    path('api/v1/musics/', MusicListCreateView.as_view(), name='music-list-create'),
+    path('api/v1/music/<str:music_uuid>/', MusicRetrieveView.as_view(), name='music-get-update-delete'),
 ]

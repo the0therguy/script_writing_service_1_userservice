@@ -403,3 +403,70 @@ class AdviceRetrieveView(APIView):
         create_user_activity(
             {'action': 'delete', 'message': f"advice {advice_uuid} was deleted", 'created_by': request.user})
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MusicListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        musics = Music.objects.all()
+        serializer = MusicSerializer(musics, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        request.data['created_by'] = request.user.id
+
+        serializer = MusicSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity({'action': 'create', 'message': 'new music crated',
+                                  'created_by': request.user})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors)
+
+
+class MusicRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, music_uuid):
+        try:
+            return Music.objects.get(music_uuid=music_uuid)
+        except Music.DoesNotExist:
+            return None
+
+    def get(self, request, music_uuid):
+        music = self.get_object(music_uuid=music_uuid)
+        if not music:
+            return Response("There is no music about this id", status=status.HTTP_400_BAD_REQUEST)
+        serializer = MusicSerializer(music)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, music_uuid):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+        music = self.get_object(music_uuid=music_uuid)
+        if not music:
+            return Response("There is no music about this id", status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = MusicUpdateSerializer(music, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity(
+                {'action': 'update', 'message': f"advice {music_uuid} was updated", 'created_by': request.user})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, music_uuid):
+        if not request.user.role or request.user.role.name != 'Admin':
+            return Response({"message": "You are not authorized to perform this action."},
+                            status=status.HTTP_403_FORBIDDEN)
+        music = self.get_object(music_uuid=music_uuid)
+        if not music:
+            return Response("There is no music about this id", status=status.HTTP_400_BAD_REQUEST)
+        music.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

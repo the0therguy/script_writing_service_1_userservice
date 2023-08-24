@@ -135,3 +135,15 @@ class CustomUserInfoUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         exclude = ('email', 'email_verified', 'role', 'username')
+
+
+class MusicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Music
+        fields = '__all__'
+
+
+class MusicUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Music
+        exclude = ('music_uuid', 'created_on', 'created_by')

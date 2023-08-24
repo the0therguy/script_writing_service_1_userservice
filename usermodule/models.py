@@ -228,7 +228,7 @@ class IdeaSpark(models.Model):
     protagonist = models.TextField(null=True, blank=True)
     secondary_character = models.TextField(null=True, blank=True)
     plot = models.TextField(null=True, blank=True)
-    number_of_generated = models.TextField(null=True, blank=True)
+    number_of_generated = models.IntegerField(default=1)
     created_on = models.DateTimeField(auto_now_add=True)
 
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
