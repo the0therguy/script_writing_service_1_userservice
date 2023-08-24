@@ -207,3 +207,33 @@ class NotePad(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Music(models.Model):
+    music_uuid = models.CharField(max_length=50)
+    title = models.CharField(max_length=200, null=True, blank=True)
+    sound = models.FileField(upload_to='music/', null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        if self.title:
+            return self.title
+        return self.music_uuid
+
+
+class IdeaSpark(models.Model):
+    idea_spark_uuid = models.CharField(max_length=50)
+    protagonist = models.TextField(null=True, blank=True)
+    secondary_character = models.TextField(null=True, blank=True)
+    plot = models.TextField(null=True, blank=True)
+    number_of_generated = models.TextField(null=True, blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        if self.protagonist:
+            return self.protagonist
+        return self.idea_spark_uuid
