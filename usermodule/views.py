@@ -19,9 +19,12 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 import uuid
 from rest_framework.parsers import JSONParser
-
+import stripe
 
 # Create your views here.
+
+stripe.api_key = 'sk_test_51NbFFrL2MME1ps3wfbAiYaOfux9XN4i25NGlNVgBcsOPcAxnwsKRRxoUdHDkX9nToy4zV84V8zgCVT3t1XPbVoc200VShiI03H'
+
 
 def create_user_activity(data):
     data['activity_uuid'] = str(uuid.uuid4())
@@ -511,3 +514,37 @@ class IdeaSparkRetrieveView(APIView):
             return Response("There is no idea spark about this id", status=status.HTTP_400_BAD_REQUEST)
         idea_spark.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CreatePaymentIntent(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            data = request.data
+            print(data)
+            # Create a PaymentIntent with the order amount and currency
+            intent = stripe.PaymentIntent.create(
+                amount=200,
+                currency='usd',
+                # In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional
+                # because Stripe enables its functionality by default.
+                automatic_payment_methods={
+                    'enabled': True,
+                },
+            )
+            print(intent['metadata'])
+            modify = stripe.PaymentIntent.modify(
+                intent.get('id'),
+            )
+            # print(modify)
+            # confirm = stripe.PaymentIntent.confirm(
+            #     intent.get('id'),
+            #     payment_method="pm_card_visa",
+            # )
+            # print(confirm)
+            return Response({
+                'clientSecret': intent['client_secret']
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)

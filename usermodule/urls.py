@@ -29,4 +29,5 @@ urlpatterns = [
     path('api/v1/idea-sparks/', IdeaSparkCreateView.as_view(), name='idea-spark-list-create'),
     path('api/v1/idea-spark/<str:idea_spark_uuid>/', IdeaSparkRetrieveView.as_view(),
          name='idea-spark-get-update-delete'),
+    path('api/v1/create-payment-intent/', CreatePaymentIntent.as_view(), name='payment-intent'),
 ]
