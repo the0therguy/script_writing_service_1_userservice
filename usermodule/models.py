@@ -223,14 +223,31 @@ class Music(models.Model):
         return self.music_uuid
 
 
+class IdeaSparkFolder(models.Model):
+    idea_spark_folder_uuid = models.CharField(max_length=50)
+    title = models.CharField(max_length=150)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+
 class IdeaSpark(models.Model):
     idea_spark_uuid = models.CharField(max_length=50)
+    idea_spark_format = models.CharField(max_length=150, null=True, blank=True)
+    genre = models.CharField(max_length=150, null=True, blank=True)
+    protagonist_gender = models.CharField(max_length=150, null=True, blank=True)
+    protagonist_desire = models.CharField(max_length=150, null=True, blank=True)
+    area = models.CharField(max_length=150, null=True, blank=True)
+    location = models.CharField(max_length=150, null=True, blank=True)
+    protagonist_vice = models.CharField(max_length=150, null=True, blank=True)
     protagonist = models.TextField(null=True, blank=True)
     secondary_character = models.TextField(null=True, blank=True)
     plot = models.TextField(null=True, blank=True)
     number_of_generated = models.IntegerField(default=1)
     created_on = models.DateTimeField(auto_now_add=True)
 
+    idea_spark_folder = models.ForeignKey(IdeaSparkFolder, on_delete=models.SET_NULL,null=True, blank=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):

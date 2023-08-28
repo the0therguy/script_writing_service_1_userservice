@@ -517,7 +517,7 @@ class IdeaSparkRetrieveView(APIView):
 
 
 class CreatePaymentIntent(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request):
         try:
@@ -533,16 +533,16 @@ class CreatePaymentIntent(APIView):
                     'enabled': True,
                 },
             )
-            print(intent['metadata'])
+            print('intent', intent)
             modify = stripe.PaymentIntent.modify(
                 intent.get('id'),
             )
-            # print(modify)
+            print('modify', modify)
             # confirm = stripe.PaymentIntent.confirm(
             #     intent.get('id'),
             #     payment_method="pm_card_visa",
             # )
-            # print(confirm)
+            # print('confirm', confirm)
             return Response({
                 'clientSecret': intent['client_secret']
             }, status=status.HTTP_200_OK)
