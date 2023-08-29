@@ -226,6 +226,9 @@ class Music(models.Model):
 class IdeaSparkFolder(models.Model):
     idea_spark_folder_uuid = models.CharField(max_length=50)
     title = models.CharField(max_length=150)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(default=timezone.now, blank=True)
+
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
@@ -247,7 +250,7 @@ class IdeaSpark(models.Model):
     number_of_generated = models.IntegerField(default=1)
     created_on = models.DateTimeField(auto_now_add=True)
 
-    idea_spark_folder = models.ForeignKey(IdeaSparkFolder, on_delete=models.SET_NULL,null=True, blank=True)
+    idea_spark_folder = models.ForeignKey(IdeaSparkFolder, on_delete=models.SET_NULL, null=True, blank=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
