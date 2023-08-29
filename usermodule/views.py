@@ -519,7 +519,7 @@ class IdeaSparkRetrieveView(APIView):
 
 
 class CreatePaymentIntent(APIView):
-    # permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self, plan_uuid):
         try:
@@ -527,11 +527,23 @@ class CreatePaymentIntent(APIView):
         except Plan.DoesNotExist:
             return None
 
-    def post(self, request):
+    def get_subscription(self, plan, user):
         try:
-            plan = self.get_object(plan_uuid=request.data.get('plan_uuid'))
-            if not plan:
-                return Response("no plan found with this id", status=status.HTTP_400_BAD_REQUEST)
+            return Subscription.objects.get(plan=plan, user=user)
+        except Subscription.DoesNotExist:
+            return None
+
+    def post(self, request):
+        plan = self.get_object(plan_uuid=request.data.get('plan_uuid'))
+        if not plan:
+            return Response("no plan found with this id", status=status.HTTP_400_BAD_REQUEST)
+
+        subscription = self.get_subscription(plan=plan, user=request.user)
+        current_date = datetime.today().date()
+        if subscription.end_date > current_date:
+            return Response("Your subscription is still active", status=status.HTTP_200_OK)
+        subscription.delete()
+        try:
             # Create a PaymentIntent with the order amount and currency
             package = request.data.get('package')
             if package == 'yearly':
