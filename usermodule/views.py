@@ -510,6 +510,16 @@ class IdeaSparkRetrieveView(APIView):
         serializer = IdeaSparkSerializer(idea_spark)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def put(self, request, idea_spark_uuid):
+        idea_spark = self.get_object(idea_spark_uuid=idea_spark_uuid, user=request.user)
+        if not idea_spark:
+            return Response("There is no idea spark about this id", status=status.HTTP_400_BAD_REQUEST)
+        serializer = IdeaSparkUpdateSerializer(idea_spark, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, idea_spark_uuid):
         idea_spark = self.get_object(idea_spark_uuid=idea_spark_uuid, user=request.user)
         if not idea_spark:
