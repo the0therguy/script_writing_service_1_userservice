@@ -654,7 +654,7 @@ class IdeaSparkFolderCreateView(APIView):
 
     def get(self, request):
         folders = IdeaSparkFolder.objects.filter(created_by=request.user).order_by('updated_on')
-        serializer = IdeaSparkSerializer(folders, many=True)
+        serializer = IdeaSparkFolderSerializer(folders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -713,3 +713,36 @@ class IdeaSparkFolderRetrieveView(APIView):
         create_user_activity({'action': 'update', 'message': f"idea spark folder {idea_spark_folder_uuid} deleted",
                               'created_by': request.user})
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MoveIdeaSparkToFolder(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_idea_spark(self, idea_spark_uuid, user):
+        try:
+            return IdeaSpark.objects.get(idea_spark_uuid=idea_spark_uuid, created_by=user)
+        except IdeaSpark.DoesNotExist:
+            return None
+
+    def get_folder(self, idea_spark_folder_uuid, user):
+        try:
+            return IdeaSparkFolder.objects.get(idea_spark_folder_uuid=idea_spark_folder_uuid, created_by=user)
+        except IdeaSparkFolder.DoesNotExist:
+            return None
+
+    def put(self, request):
+        idea_spark = self.get_idea_spark(request.data.get('idea_spark_uuid'), request.user)
+        if not idea_spark:
+            return Response("No idea spark found", status=status.HTTP_400_BAD_REQUEST)
+        idea_spark_folder = self.get_folder(request.data.get('idea_spark_folder_uuid'), request.user)
+        if not idea_spark_folder:
+            return Response("No idea spark folder found", status=status.HTTP_400_BAD_REQUEST)
+
+        # idea_spark.idea_spark_folder = idea_spark_folder
+        # idea_spark.save()
+
+        serializer = IdeaSparkUpdateSerializer(idea_spark, data={'idea_spark_folder': idea_spark_folder.id}, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

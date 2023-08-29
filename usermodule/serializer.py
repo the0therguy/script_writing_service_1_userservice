@@ -167,3 +167,9 @@ class IdeaSparkSerializer(serializers.ModelSerializer):
     class Meta:
         model = IdeaSpark
         fields = '__all__'
+
+
+class IdeaSparkUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdeaSpark
+        fields = ['film_name', 'idea_spark_folder']

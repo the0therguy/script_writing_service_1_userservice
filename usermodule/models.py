@@ -244,6 +244,7 @@ class IdeaSpark(models.Model):
     area = models.CharField(max_length=150, null=True, blank=True)
     location = models.CharField(max_length=150, null=True, blank=True)
     protagonist_vice = models.CharField(max_length=150, null=True, blank=True)
+    film_name = models.CharField(max_length=250, null=True, blank=True)
     protagonist = models.TextField(null=True, blank=True)
     secondary_character = models.TextField(null=True, blank=True)
     plot = models.TextField(null=True, blank=True)

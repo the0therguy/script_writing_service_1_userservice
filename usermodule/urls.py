@@ -34,4 +34,5 @@ urlpatterns = [
     path('api/v1/idea-spark-folders/', IdeaSparkFolderCreateView.as_view(), name='idea-spark-list-create'),
     path('api/v1/idea-spark-folder/<str:idea_spark_folder_uuid>/', IdeaSparkFolderRetrieveView.as_view(),
          name='idea-spark-get-update-delete'),
+    path('api/v1/idea-move-to-folder/', MoveIdeaSparkToFolder.as_view(), name='move-idea-to-folder')
 ]
