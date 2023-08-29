@@ -738,11 +738,15 @@ class MoveIdeaSparkToFolder(APIView):
         if not idea_spark_folder:
             return Response("No idea spark folder found", status=status.HTTP_400_BAD_REQUEST)
 
-        # idea_spark.idea_spark_folder = idea_spark_folder
-        # idea_spark.save()
-
-        serializer = IdeaSparkUpdateSerializer(idea_spark, data={'idea_spark_folder': idea_spark_folder.id}, partial=True)
+        serializer = IdeaSparkUpdateSerializer(idea_spark, data={'idea_spark_folder': idea_spark_folder.id},
+                                               partial=True)
         if serializer.is_valid():
             serializer.save()
+            idea_spark_folder.updated_on = timezone.now()
+            idea_spark_folder.save()
+            create_user_activity({'action': 'update',
+                                  'message': f"idea spark {idea_spark.idea_spark_uuid} move to {idea_spark_folder.idea_spark_folder_uuid}",
+                                  'created_by': request.user})
+
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
