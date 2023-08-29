@@ -647,3 +647,69 @@ class TransactionCreateView(APIView):
 
         send_mail(subject, message, from_email, recipient_list, fail_silently=False)
         return Response("Your Invoice failed", status=status.HTTP_400_BAD_REQUEST)
+
+
+class IdeaSparkFolderCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        folders = IdeaSparkFolder.objects.filter(created_by=request.user).order_by('updated_on')
+        serializer = IdeaSparkSerializer(folders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        if not request.data.get('title'):
+            request.data['title'] = request.data.get('idea_spark_folder_uuid')
+
+        request.data['created_by'] = request.user.id
+        serializer = IdeaSparkFolderSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity({'action': 'create', 'message': 'new idea spark folder crated',
+                                  'created_by': request.user})
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IdeaSparkFolderRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, idea_spark_folder_uuid, user):
+        try:
+            return IdeaSparkFolder.objects.get(idea_spark_folder_uuid=idea_spark_folder_uuid, created_by=user)
+        except IdeaSparkFolder.DoesNotExist:
+            return None
+
+    def get(self, request, idea_spark_folder_uuid):
+        folder = self.get_object(idea_spark_folder_uuid=idea_spark_folder_uuid, user=request.user)
+        if not folder:
+            return Response("No folder found", status=status.HTTP_400_BAD_REQUEST)
+        idea_sparks = IdeaSpark.objects.filter(idea_spark_folder=folder, created_by=request.user)
+        serializer = IdeaSparkSerializer(idea_sparks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request, idea_spark_folder_uuid):
+        folder = self.get_object(idea_spark_folder_uuid=idea_spark_folder_uuid, user=request.user)
+        if not folder:
+            return Response("No folder found", status=status.HTTP_400_BAD_REQUEST)
+        request.data['updated_on'] = timezone.now()
+        serializer = IdeaSparkFolderUpdateSerializer(folder, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            create_user_activity({'action': 'update', 'message': f"idea spark folder {idea_spark_folder_uuid} updated",
+                                  'created_by': request.user})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, idea_spark_folder_uuid):
+        folder = self.get_object(idea_spark_folder_uuid=idea_spark_folder_uuid, user=request.user)
+        if not folder:
+            return Response("No folder found", status=status.HTTP_400_BAD_REQUEST)
+
+        idea_spark = IdeaSpark.objects.filter(idea_spark_folder=folder, created_by=request.user)
+        idea_spark.delete()
+        folder.delete()
+        create_user_activity({'action': 'update', 'message': f"idea spark folder {idea_spark_folder_uuid} deleted",
+                              'created_by': request.user})
+        return Response(status=status.HTTP_204_NO_CONTENT)

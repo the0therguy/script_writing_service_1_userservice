@@ -31,5 +31,7 @@ urlpatterns = [
          name='idea-spark-get-update-delete'),
     path('api/v1/create-payment-intent/', CreatePaymentIntent.as_view(), name='payment-intent'),
     path('api/v1/transaction/<str:transaction_status>/', TransactionCreateView.as_view(), name='transaction-create'),
-
+    path('api/v1/idea-spark-folders/', IdeaSparkFolderCreateView.as_view(), name='idea-spark-list-create'),
+    path('api/v1/idea-spark-folder/<str:idea_spark_folder_uuid>/', IdeaSparkFolderRetrieveView.as_view(),
+         name='idea-spark-get-update-delete'),
 ]

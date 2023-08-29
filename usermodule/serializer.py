@@ -149,7 +149,21 @@ class MusicUpdateSerializer(serializers.ModelSerializer):
         exclude = ('music_uuid', 'created_on', 'created_by')
 
 
+class IdeaSparkFolderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdeaSparkFolder
+        fields = '__all__'
+
+
+class IdeaSparkFolderUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IdeaSparkFolder
+        fields = ['title']
+
+
 class IdeaSparkSerializer(serializers.ModelSerializer):
+    idea_spark_folder = serializers.CharField(source='idea_spark_folder.title', read_only=True)
+
     class Meta:
         model = IdeaSpark
         fields = '__all__'
