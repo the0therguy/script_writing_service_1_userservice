@@ -1,10 +1,11 @@
+import json
+
 from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .serializer import *
 from .models import *
-from datetime import datetime
 from datetime import datetime, timedelta
 import random
 import string
@@ -19,9 +20,13 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 import uuid
 from rest_framework.parsers import JSONParser
-
+import stripe
+from django.core.mail import send_mail
 
 # Create your views here.
+
+stripe.api_key = 'sk_test_51NbFFrL2MME1ps3wfbAiYaOfux9XN4i25NGlNVgBcsOPcAxnwsKRRxoUdHDkX9nToy4zV84V8zgCVT3t1XPbVoc200VShiI03H'
+
 
 def create_user_activity(data):
     data['activity_uuid'] = str(uuid.uuid4())
@@ -511,3 +516,122 @@ class IdeaSparkRetrieveView(APIView):
             return Response("There is no idea spark about this id", status=status.HTTP_400_BAD_REQUEST)
         idea_spark.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CreatePaymentIntent(APIView):
+    # permission_classes = [IsAuthenticated]
+
+    def get_object(self, plan_uuid):
+        try:
+            return Plan.objects.get(plan_uuid=plan_uuid, active=True)
+        except Plan.DoesNotExist:
+            return None
+
+    def post(self, request):
+        try:
+            plan = self.get_object(plan_uuid=request.data.get('plan_uuid'))
+            if not plan:
+                return Response("no plan found with this id", status=status.HTTP_400_BAD_REQUEST)
+            # Create a PaymentIntent with the order amount and currency
+            package = request.data.get('package')
+            if package == 'yearly':
+                amount = int((plan.monthly_price * 12) - (plan.yearly_discount * 12))
+            else:
+                amount = int(plan.monthly_price)
+            intent = stripe.PaymentIntent.create(
+                amount=amount,
+                currency='usd',
+                # In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional
+                # because Stripe enables its functionality by default.
+                automatic_payment_methods={
+                    'enabled': True,
+                },
+            )
+            return Response({
+                'clientSecret': intent['client_secret']
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(e)
+            return Response(str(e), status=status.HTTP_403_FORBIDDEN)
+
+
+class TransactionCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, plan_uuid):
+        try:
+            return Plan.objects.get(plan_uuid=plan_uuid, active=True)
+        except Plan.DoesNotExist:
+            return None
+
+    def post(self, request, transaction_status):
+        body = json.loads(request.body.decode('utf-8'))
+        if transaction_status == 'success':
+            plan = self.get_object(plan_uuid=body.get('plan_uuid'))
+            if not plan:
+                return Response("No plan found", status=status.HTTP_400_BAD_REQUEST)
+            if body.get('package') == 'yearly':
+                end_date = datetime.today().date() + timedelta(days=365)
+            else:
+                end_date = datetime.today().date() + timedelta(days=30)
+            subscription = Subscription.objects.create(**{
+                'plan': plan,
+                'start_date': datetime.today().date(),
+                'end_date': end_date,
+                'permission': plan.plan_permission,
+                'user': request.user
+            })
+            subscription.save()
+
+            transaction = Transaction.objects.create(**{
+                'transaction_uuid': str(uuid.uuid4()),
+                'amount': body.get('amount'),
+                'payment_gateway': 'stripe',
+                'transaction_status': 'success',
+                'plan': plan,
+                'user': request.user
+            })
+            transaction.save()
+            invoice = Invoice.objects.create(**{
+                'invoice_uuid': str(uuid.uuid4()),
+                'transaction': transaction,
+                'payment_status': True,
+                'invoice_from': {'email': 'w@s.com'},
+                'invoice_to': {'email': request.user.email}
+            })
+            invoice.save()
+            subject = 'Your Invoice'
+            message = 'Your subscript created successfully'
+            from_email = 'email'  # Your email address
+            recipient_list = [request.user.email]  # Recipient's email address(es)
+
+            send_mail(subject, message, from_email, recipient_list, fail_silently=True)
+            return Response("Invoice has been sent to your email, please check", status=status.HTTP_201_CREATED)
+
+        plan = self.get_object(plan_uuid=body.get('plan_uuid'))
+        if not plan:
+            return Response("No plan found", status=status.HTTP_400_BAD_REQUEST)
+        transaction = Transaction.objects.create(**{
+            'transaction_uuid': str(uuid.uuid4()),
+            'amount': body.get('amount'),
+            'payment_gateway': 'stripe',
+            'transaction_status': 'fail',
+            'plan': plan,
+            'user': request.user
+        })
+        transaction.save()
+        invoice = Invoice.objects.create(**{
+            'invoice_uuid': str(uuid.uuid4()),
+            'transaction': transaction,
+            'payment_status': True,
+            'invoice_from': {'email': 'w@s.com'},
+            'invoice_to': {'email': request.user.email}
+        })
+        invoice.save()
+        subject = 'Your Invoice'
+        message = 'Your subscription create failed'
+        from_email = 'email'  # Your email address
+        recipient_list = [request.user.email]  # Recipient's email address(es)
+
+        send_mail(subject, message, from_email, recipient_list, fail_silently=False)
+        return Response("Your Invoice failed", status=status.HTTP_400_BAD_REQUEST)
