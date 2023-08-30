@@ -203,6 +203,7 @@ class NotePad(models.Model):
     body = models.TextField(null=True, blank=True)
     color = models.CharField(max_length=8)
     created_on = models.DateTimeField(auto_now_add=True)
+    notepad_no = models.IntegerField(default=1)
 
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
 
