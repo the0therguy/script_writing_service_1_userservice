@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from multiselectfield import MultiSelectField
 
 
 # Create your models here.
@@ -79,7 +80,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(_('email'), unique=True)
     email_verified = models.BooleanField(default=False)
     reminder = models.BooleanField(default=False)
-    weekday = models.CharField(max_length=3, choices=WEEKDAYS, null=True, blank=True)
+    weekday = MultiSelectField(max_length=3, choices=WEEKDAYS, null=True, blank=True)
     device = models.CharField(max_length=20, choices=USER_DEVICE, default='computer')
 
     user_level = models.CharField(max_length=100, choices=PROFILE_LEVEL, default='beginners')

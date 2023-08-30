@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django_rest_passwordreset',
     'allauth',
     'allauth.account',
+    'multiselectfield',
     'usermodule',
     # 'usermodule.apps.UsermoduleConfig',
     'corsheaders'
