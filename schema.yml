@@ -194,6 +194,7 @@ paths:
       - usermodule
       security:
       - jwtAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -210,6 +211,7 @@ paths:
       - usermodule
       security:
       - jwtAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -545,7 +547,7 @@ paths:
       responses:
         '200':
           description: No response body
-  /usermodule/api/v1/profile:
+  /usermodule/api/v1/profile/:
     get:
       operationId: usermodule_api_v1_profile_retrieve
       tags:
@@ -756,6 +758,9 @@ paths:
           description: ''
 components:
   schemas:
+    BlankEnum:
+      enum:
+      - ''
     CustomUser:
       type: object
       properties:
@@ -784,6 +789,12 @@ components:
           $ref: '#/components/schemas/UserLevelEnum'
         device:
           $ref: '#/components/schemas/DeviceEnum'
+        weekday:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/WeekdayEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
       required:
       - email
       - id
@@ -807,6 +818,9 @@ components:
           format: email
       required:
       - email
+    NullEnum:
+      enum:
+      - null
     OTPResend:
       type: object
       properties:
@@ -890,6 +904,24 @@ components:
         * `beginners` - Beginners
         * `intermediate` - Intermediate
         * `professional` - Professional
+    WeekdayEnum:
+      enum:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+      - sat
+      - sun
+      type: string
+      description: |-
+        * `mon` - Monday
+        * `tue` - Tuesday
+        * `wed` - Wednesday
+        * `thu` - Thursday
+        * `fri` - Friday
+        * `sat` - Saturday
+        * `sun` - Sunday
   securitySchemes:
     jwtAuth:
       type: http

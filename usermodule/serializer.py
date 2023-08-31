@@ -7,12 +7,13 @@ from .models import *
 from django.contrib.auth import get_user_model
 from allauth.account.adapter import get_adapter
 from allauth.account.utils import setup_user_email
+from django.core.mail import send_mail
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'full_name', 'email', 'password', 'user_level', 'device')
+        fields = ('id', 'username', 'full_name', 'email', 'password', 'user_level', 'device', 'weekday')
         extra_kwargs = {
             'password': {'write_only': True},
             'role': {'write_only': True},
@@ -31,6 +32,7 @@ class CustomUserSerializer(serializers.ModelSerializer):
         self.save_otp(user, otp)
 
         # Send OTP via email (as shown in the previous response)
+        self.send_otp_email(user, otp)  # New line to call the email sending function
 
         return user
 
@@ -43,6 +45,14 @@ class CustomUserSerializer(serializers.ModelSerializer):
         otp_expiry = datetime.now() + timedelta(minutes=15)
         OTP.objects.create(token=otp, expire_time=otp_expiry, user=user)
 
+    def send_otp_email(self, user, otp):
+        subject = 'Your OTP Code'
+        message = f'Your OTP code is: {otp}'
+        from_email = 'email'  # Replace with your sender email
+        recipient_list = [user.email]
+
+        send_mail(subject, message, from_email, recipient_list)
+
 
 class OTPVerificationSerializer(serializers.Serializer):
     otp_token = serializers.CharField(max_length=8)
@@ -51,19 +61,6 @@ class OTPVerificationSerializer(serializers.Serializer):
 class OTPResendSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
 
-
-# class TokenObtainPairSerializer(JwtTokenObtainPairSerializer):
-#     username_field = get_user_model().USERNAME_FIELD
-#
-#     @classmethod
-#     def get_token(cls, user):
-#         token = super().get_token(user)
-#         token['name'] = user.name
-#         token['email'] = user.email
-#         token['is_superuser'] = user.is_superuser
-#         token['is_staff'] = user.is_staff
-#
-#         return token
 
 class CustomLoginSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
@@ -131,10 +128,25 @@ class AdviceUpdateSerializer(serializers.ModelSerializer):
         exclude = ('advice_uuid', 'created_on')
 
 
+WEEKDAYS = [
+    ('mon', 'Monday'),
+    ('tue', 'Tuesday'),
+    ('wed', 'Wednesday'),
+    ('thu', 'Thursday'),
+    ('fri', 'Friday'),
+    ('sat', 'Saturday'),
+    ('sun', 'Sunday'),
+]
+
+
 class CustomUserInfoUpdateSerializer(serializers.ModelSerializer):
+    weekday = serializers.MultipleChoiceField(source='custom_user.weekday', choices=WEEKDAYS)
+
     class Meta:
         model = CustomUser
-        exclude = ('email', 'email_verified', 'role', 'username')
+        exclude = (
+            'email', 'email_verified', 'role', 'username', 'password', 'last_login', 'is_superuser', 'first_name',
+            'last_name', 'date_joined', 'is_active', 'is_staff', 'groups', 'user_permissions')
 
 
 class MusicSerializer(serializers.ModelSerializer):

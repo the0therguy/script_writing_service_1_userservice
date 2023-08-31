@@ -22,6 +22,7 @@ import uuid
 from rest_framework.parsers import JSONParser
 import stripe
 from django.core.mail import send_mail
+from django.contrib.auth.hashers import check_password
 
 # Create your views here.
 
@@ -41,11 +42,11 @@ class CustomUserCreateView(generics.CreateAPIView):
 
 
 class OTPVerificationView(generics.CreateAPIView):
+    permission_classes = (AllowAny,)
+
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return OTPVerificationSerializer
-
-    permission_classes = (AllowAny,)
 
     def post(self, request, *args, **kwargs):
         otp_token = request.data.get('otp_token')
@@ -127,7 +128,7 @@ class LogoutView(APIView):
 
             return Response(status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
 
 class ChangePasswordView(APIView):
@@ -151,8 +152,7 @@ class ChangePasswordView(APIView):
                                   'message': f"{request.user.username}'s password updated",
                                   'created_by': request.user})
             return Response({"message": "Password changed successfully."}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GlossaryView(APIView):
@@ -296,7 +296,6 @@ class PlanDetailView(APIView):
 
 
 class CustomUserViewByEmail(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get_object(self, email):
         try:
@@ -333,7 +332,6 @@ class CustomUserProfileView(APIView):
 
 
 class CustomUserViewById(APIView):
-    permission_classes = [IsAuthenticated]
 
     def get_object(self, pk):
         user = CustomUser.objects.get(pk=pk)

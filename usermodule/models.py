@@ -58,6 +58,11 @@ PROFILE_LEVEL = (
     ('professional', 'Professional')
 )
 
+USER_DEVICE = [
+    ('computer', 'Computer'),
+    ('tablet', 'Tablet'),
+    ('mobile', 'Mobile'),
+]
 WEEKDAYS = [
     ('mon', 'Monday'),
     ('tue', 'Tuesday'),
@@ -68,19 +73,13 @@ WEEKDAYS = [
     ('sun', 'Sunday'),
 ]
 
-USER_DEVICE = [
-    ('computer', 'Computer'),
-    ('tablet', 'Tablet'),
-    ('mobile', 'Mobile'),
-]
-
 
 class CustomUser(AbstractUser):
     full_name = models.CharField(max_length=220, null=True, blank=True)
     email = models.EmailField(_('email'), unique=True)
     email_verified = models.BooleanField(default=False)
     reminder = models.BooleanField(default=False)
-    weekday = MultiSelectField(max_length=3, choices=WEEKDAYS, null=True, blank=True)
+    weekday = MultiSelectField(max_length=30, choices=WEEKDAYS, null=True, blank=True)
     device = models.CharField(max_length=20, choices=USER_DEVICE, default='computer')
 
     user_level = models.CharField(max_length=100, choices=PROFILE_LEVEL, default='beginners')
