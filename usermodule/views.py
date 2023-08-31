@@ -313,17 +313,21 @@ class CustomUserViewByEmail(APIView):
         serializer = CustomUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def put(self, request, email):
-        user = self.get_object(email)
-        if not user:
-            return Response('No user found', status=status.HTTP_400_BAD_REQUEST)
-        if email != user.email:
-            return Response("You don't have access on this page", status=status.HTTP_403_FORBIDDEN)
 
+class CustomUserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        user = request.user
         serializer = CustomUserInfoUpdateSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            create_user_activity({'action': 'update', 'message': 'user updated', 'created_by': request.user})
+            create_user_activity({'action': 'update', 'message': 'user updated', 'created_by': user})
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

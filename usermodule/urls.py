@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/v1/get-plan/<str:plan_uuid>/', PlanDetailView.as_view(), name='plan-list'),
     path('api/v1/password_reset/', include('django_rest_passwordreset.urls', namespace='password_reset')),
     path('api/v1/get-user-by-email/<str:email>/', CustomUserViewByEmail.as_view(), name='user-view-by-email'),
+    path('api/v1/profile', CustomUserProfileView.as_view(), name='profile-view-update'),
     path('api/v1/get-user-by-id/<int:pk>/', CustomUserViewById.as_view(), name='user-view-by-id'),
     path('api/v1/advices/', AdviceListCreate.as_view(), name='advice-get-create'),
     path('api/v1/advice/<str:advice_uuid>/', AdviceRetrieveView.as_view(), name='advice-get-update-delete'),
